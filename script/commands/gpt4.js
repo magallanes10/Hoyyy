@@ -1,33 +1,34 @@
-const axios = require('axios');
-
-module.exports.config = {
-    name: "gpt4",
-    version: "1.0",
-    hasPermission: 0,
-    credits: "SiAM | @Siam.The.Fox",
-    description: "",
-  usePrefix: false,
-    commandCategory: "fun",
-    usages: " ", // Modify it as needed
-    cooldowns: 20,
-};
-
-module.exports.run = async function ({ api, args, event }) {
-    const query = args.join(" ");
-
-    if (!query) {
-        return api.sendMessage("Please provide a query. Usage: /gpt4 'query'", event.threadID, event.messageID); api.sendMessage("🔍 | Gpt4 is Searching Please Wait....", event.threadID, event.messageID);
+/* 
+API BY DEKU
+contact: https://facebook.com/joshg101
+*/
+const {get} = require('axios');
+const url = "http://eu4.diresnode.com:3301"; //available model: baymax_gpt, gojo_gpt
+module.exports = {
+    config: {
+        name: "gpt4", //rename it if u want
+        hasPermssion: 0,
+        version: "1.0.0",
+        commandCategory: "AI",
+        credits: "Deku",
+        cooldowns: 0,
+        usages: "[ask]/[]clear] to clear history",
+        usePrefix: false,
+        description: "Talk to GPT4 (with continues conversation)"
+    },
+    run: async function({api, event, args}){
+            let prompt = args.join(' '), id = event.senderID;
+           async function r(msg){
+                 api.sendMessage(msg, event.threadID, event.messageID)
+             }
+            if(!prompt) return r("Missing input!\n\nIf you want to reset the conversation with "+this.config.name+" you can use “"+this.config.name+" clear”");
+            r("🔍…");
+        api.sendMessage("📝 | GPT4 is Searching your answer", event.threadID, event.messageID);
+            try {
+                const res = await get(url+"/gpt4?prompt="+prompt+"&idd="+id);
+                return r(res.data.gpt4);
+            } catch (e){
+                return r(e.message)
+            }
     }
-
-    const userID = event.senderID; 
-
-    try {
-        const response = await axios.get(`https://gpt4.siam-apiproject.repl.co/api?uid=${userID}&query=${encodeURIComponent(query)}`);
-        const answer = response.data.lastAnswer;
-
-        await api.sendMessage(answer, event.threadID, event.messageID);
-    } catch (error) {
-        console.error("Error:", error);
-        api.sendMessage("Error fetching response...", event.threadID, event.messageID);
-    }
-};
+}
