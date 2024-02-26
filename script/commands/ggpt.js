@@ -5,7 +5,7 @@ const storageFile = 'user_data.json';
 const chatRecordFile = 'chat_records.json';
 
 module.exports.config = {
-    name: "ai",
+    name: "ggpt",
     version: "1.0.0",
     hasPermssion: 0,
     credits: "Jonell Magallanes",
@@ -24,7 +24,7 @@ module.exports.run = async function ({ api, event, args }) {
     if (!content) return api.sendMessage("Please provide your question.\n\nExample: ai what is the solar system?", event.threadID, event.messageID);
 
     try {
-        api.sendMessage("🔍 | AI is searching for your answer. Please wait...", event.threadID, event.messageID);
+        api.sendMessage("🔍 | GlobalGPT is searching for your answer. Please wait...", event.threadID, event.messageID);
 
         const response = await axios.get(apiUrl);
         const { content: result, requestCount } = response.data; // Updated response structure
