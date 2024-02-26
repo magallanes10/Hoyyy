@@ -7,20 +7,20 @@ module.exports.config = {
     version: "1.0.0",
     hasPermssion: 0,
     credits: "Jonell Magallanes",
-    description: "Download images from Pinterest",
+    description: "Search images from Pinterest",
     usePrefix: false,
     commandCategory: "Media",
-    usages: "[title] [count]",
+    usages: "[query] [count]",
     cooldowns: 10
 };
 
 module.exports.run = async function ({ api, event, args }) {
-    const title = encodeURIComponent(args[0]);
-    const count = args[1];
+    const query = encodeURIComponent(args.join(' ')); 
+    const count = args[args.length - 1]; 
 
-    if (!title || isNaN(count)) return api.sendMessage("Invalid command usage. Example: pin wallpaper 10", event.threadID, event.messageID);
+    if (!query || isNaN(count)) return api.sendMessage("Invalid command usage. Example: pin wallpaper 10", event.threadID, event.messageID);
 
-    const apiUrl = `https://jonellccapis-dbe67c18fbcf.herokuapp.com/api/pin?title=${title}&count=${count}`;
+    const apiUrl = `https://jonellccapis-dbe67c18fbcf.herokuapp.com/api/pin?title=${query}&count=${count}`;
 
     try {
         api.sendMessage("🔍 | Searching Pinterest images. Please wait...", event.threadID, event.messageID);
@@ -37,7 +37,6 @@ module.exports.run = async function ({ api, event, args }) {
 
         const imageAttachments = [];
 
-        // Download and add images to attachments
         for (let i = 0; i < imageUrls.length; i++) {
             const imageUrl = imageUrls[i];
             const imageBuffer = await axios.get(imageUrl, { responseType: 'arraybuffer' });
@@ -58,6 +57,6 @@ module.exports.run = async function ({ api, event, args }) {
         }
     } catch (error) {
         console.error(error);
-        api.sendMessage("An error occurred while processing your request.", event.threadID);
+        api.sendMessage("🔨 | An error occurred while processing your request.", event.threadID);
     }
 };
