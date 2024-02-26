@@ -63,8 +63,8 @@ setInterval(() => {
 }, 30000); 
 const config = require('./config.json'); 
 
-const commandsPath = './modules/commands'; 
-const eventsPath = './modules/events'; 
+const commandsPath = './script/commands'; 
+const eventsPath = './script/events'; 
 
 const getFilesCount = (dirPath) => {
   try {
