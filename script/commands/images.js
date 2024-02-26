@@ -1,0 +1,49 @@
+module.exports.config = {
+    name: "image",
+    version: "1.0.0",
+    hasPermssion: 0,
+    credits: "Jonell Magallanes",
+    description: "Image search",
+    usePrefix: false,
+    commandCategory: "Search",
+    usages: "[Text] - [amount of search]",
+    cooldowns: 0,
+};
+
+module.exports.run = async function({ api, event, args }) {
+    const axios = require("axios");
+    const fs = require("fs-extra");
+
+    const keySearch = args.join(" ");
+
+    if (!keySearch.includes("-")) {
+        return api.sendMessage('Please enter in the format, example: ' + global.config.PREFIX + this.config.name + ' Captain Underpants - 10', event.threadID, event.messageID);
+    }
+
+    api.sendMessage(` 🖼 | Currently Searching the Image of ${keySearch}`, event.threadID, event.messageID);
+
+    const keySearchs = keySearch.substr(0, keySearch.indexOf('-'));
+    const numberSearch = keySearch.split("-").pop() || 6;
+
+    const res = await axios.get(`https://cc-project-apis-jonell-magallanes.onrender.com/api/pin?title=${encodeURIComponent(keySearchs)}&count=${numberSearch}`);
+    const data = res.data.data;
+
+    var num = 0;
+    var imgData = [];
+
+    for (var i = 0; i < parseInt(numberSearch); i++) {
+        let path = __dirname + `/cache/${num += 1}.jpg`;
+        let getDown = (await axios.get(`${data[i]}`, { responseType: 'arraybuffer' })).data;
+        fs.writeFileSync(path, Buffer.from(getDown, 'utf-8'));
+        imgData.push(fs.createReadStream(__dirname + `/cache/${num}.jpg`));
+    }
+
+    api.sendMessage({
+        attachment: imgData,
+        body: `${numberSearch} Search results for keyword: ${keySearchs}`
+    }, event.threadID, event.messageID);
+
+    for (let ii = 1; ii <= parseInt(numberSearch); ii++) {
+        fs.unlinkSync(__dirname + `/cache/${ii}.jpg`);
+    }
+};
