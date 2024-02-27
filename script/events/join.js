@@ -40,7 +40,7 @@ module.exports.run = async function({ api, event, Users, Threads }) {
             return console.log(err);
           }
           var obj = Object.keys(data);
-          var userName = data[obj].name.replace(/[%0-9]/g, " ").replace(/\s+/g, " ").trim();
+          var userName = data[obj].name.replace("@", "");
           if (userID !== api.getCurrentUserID()) {
             nameArray.push(userName);
             mentions.push({
@@ -68,11 +68,8 @@ module.exports.run = async function({ api, event, Users, Threads }) {
             };
 
             // URL encoding for the request
-            let encodedUserID = encodeURIComponent(userID);
-            let encodedNameArray = encodeURIComponent(nameArray.join(',').replace(/[ %]/g, ''));
-            let encodedGroupName = encodeURIComponent(threadName.replace(/[%0-9]/g, " ").replace(/\s+/g, " ").trim());
-            let encodedURL = `https://joinapibyjonell-23c74876953d.herokuapp.com/join?senderID=${encodedUserID}&name=${encodedNameArray}&imagebackground=${avt1}&groupname=${encodedGroupName}&count=${participantIDs.length}`;
-
+            let encodedURL = `https://joinapibyjonell-23c74876953d.herokuapp.com/join?senderID=${userID}&name=${nameArray}&imagebackground=${avt1}&groupname=${encodeURIComponent(threadName)}&count=${participantIDs.length}`;
+            
             request(encodeURI(encodedURL)).pipe(fs.createWriteStream(`come.jpg`)).on("close", callback);
           }
         });
