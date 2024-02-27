@@ -6,7 +6,7 @@ const chatRecordFile = 'chat_records.json';
 const axiosStatusFile = 'axios_status.json';
 
 const primaryApiUrl = 'https://nekohime.xyz/api/ai/openai';
-const backupApiUrl = 'https://cc-project-apis-jonell-magallanes.onrender.com/api/globalgpt';
+const backupApiUrl = 'https://jonellccapis-dbe67c18fbcf.herokuapp.com/api/globalgpt';
 
 let isPrimaryApiStable = true;
 let axiosSwitchedMessageSent = false;
