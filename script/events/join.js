@@ -1,75 +1,69 @@
 module.exports.config = {
   name: "join",
-  eventType: ["log:subscribe"],
-  version: "1.0.1",
-  credits: "SaikiDesu/Jonell Magallanes ",
-  description: "Notify bots or people entering the group",
-  dependencies: {
-    "fs-extra": "",
-    "axios": "0.24.0" // Make sure to install this dependency
-  }
+  eventType: ['log:subscribe'],
+  version: "1.0.0",
+  credits: "Mirai-Team", //mod by deku
+  description: "GROUP UPDATE NOTIFICATION"
 };
 
-module.exports.run = async function ({ api, event }) {
-  const request = require("request");
+module.exports.run = async function ({ api, event, Users, Threads }) {
+  const fs = require("fs");
   const axios = require("axios");
-  const path = require("path");
-  const fs = global.nodemodule["fs-extra"];
-  const { threadID } = event;
+  const request = require("request");
+
+  function reply(data) {
+    api.sendMessage(data, event.threadID, event.messageID);
+  }
 
   if (event.logMessageData.addedParticipants.some(i => i.userFbId == api.getCurrentUserID())) {
-    api.changeNickname(`» ${global.config.PREFIX} « ${(!global.config.BOTNAME) ? " " : global.config.BOTNAME}`, threadID, api.getCurrentUserID());
-    return api.sendMessage(`${global.config.BOTNAME} connected successfully!\nType "${global.config.PREFIX}help" to view all commands\n\nContact the admin if you encounter an error.\n\n👷 Developer:${global.config.BOTOWNER}`, threadID);
+    api.changeNickname(`${global.config.BOTNAME} • [ ${global.config.PREFIX} ]`, event.threadID, api.getCurrentUserID());
+    return reply(`${global.config.BOTNAME} connected successfully!\nType "${global.config.PREFIX}help" to view all commands\n\nContact the admin if you encounter an error.\n\n👷 Developer:${global.config.BOTOWNER}`);
   } else {
     try {
-      const { threadName, participantIDs } = await api.getThreadInfo(threadID);
-      const threadData = global.data.threadData.get(parseInt(threadID)) || {};
-      const mentions = [], nameArray = [], memLength = [];
+      const { threadID } = event;
+      let { threadName, participantIDs, imageSrc } = await api.getThreadInfo(threadID);
+      var tn = threadName;
+      if (threadName == null) {
+        var tn = "Unnamed group";
+      }
+      var threadInfo = await api.getThreadInfo(threadID);
+      var mentions = [],
+        nameArray = [],
+        memLength = [],
+        i = 0;
 
-      for (let newParticipant of event.logMessageData.addedParticipants) {
+      let addedParticipants1 = event.logMessageData.addedParticipants;
+      for (let newParticipant of addedParticipants1) {
         let userID = newParticipant.userFbId;
-        api.getUserInfo(parseInt(userID), async (err, data) => {
-          if (err) return console.log(err);
+        const userNames = await getUserNames(api, userID);
 
-          var obj = Object.keys(data);
-          var userName = data[obj].name.replace("@", "");
+        if (userID !== api.getCurrentUserID()) {
+          nameArray.push(userNames);
+          mentions.push({
+            tag: userNames,
+            id: userID,
+            fromIndex: 0
+          });
+          memLength.push(participantIDs.length - i++);
+          memLength.sort((a, b) => a - b);
+          let avt = ["https://i.postimg.cc/15HRf0gW/images-2023-08-19-T230952-245.jpg", "https://i.postimg.cc/DyDjQHbm/images-2023-09-05-T174116-282.jpg", "https://i.postimg.cc/FKbT4KCJ/images-2023-08-18-T223959-843.jpg", "https://i.postimg.cc/7hRVVJhj/images-2023-07-26-T114510-257.jpg"];
+          var avt1 = avt[Math.floor(Math.random() * avt.length)];
 
-          if (userID !== api.getCurrentUserID()) {
-            nameArray.push(userName);
-            mentions.push({ tag: userName, id: userID, fromIndex: 0 });
-            memLength.push(participantIDs.length - memLength.length + 1);
+          let callback = function () {
+            return reply({
+              body: `Hello ${userNames}\nWelcome to ${tn}\nYou're the ${participantIDs.length}th member on this group.\nEnjoy!`,
+              attachment: fs.createReadStream(`come.jpg`),
+              mentions
+            }, () => fs.unlinkSync(`come.jpg`));
+          };
 
-            const msg = (typeof threadData.customJoin == "undefined") ?
-              `BONJOUR!, ${userName}\n┌────── ～●～ ──────┐\n----- Welcome to ${threadName} -----\n└────── ～●～ ──────┘\nYou're the ${participantIDs.length} the member of this group, please enjoy! 🥳♥` :
-              threadData.customJoin;
-
-            const background = ["https://i.postimg.cc/k5Yt863Q/desktop-wallpaper-firewatch-best-games-game-quest-horror-pc-ps4.jpg", "https://i.postimg.cc/FKVTQxS9/images-2023-08-19-T230916-290.jpg"];
-            const selectedBackground = background[Math.floor(Math.random() * background.length)];
-
-            const avtUrl = `https://graph.facebook.com/${userID}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
-const pathavt1 = path.join(__dirname, '/cache/avt.png');
-
-            const avtResponse = await axios({
-              method: 'get',
-              url: avtUrl,
-              responseType: 'stream'
-            });
-                        avtResponse.data.pipe(fs.createWriteStream(pathavt1));
-
-            const callback = function () {
-              return api.sendMessage({
-                body: msg,
-                attachment: fs.createReadStream(__dirname + `/cache/come.jpg`),
-                mentions
-              }, event.threadID, () => fs.unlinkSync(__dirname + `/cache/come.jpg`));
-            };
-
-            request(encodeURI(`https://api.popcat.xyz/welcomecard?background=${selectedBackground}&text1=${userName}&text2=Welcome+To+${threadName}&text3=You+Are+The ${participantIDs.length} the+Member&avatar=${avtUrl}`)).pipe(fs.createWriteStream(__dirname + `/cache/come.jpg`)).on("close", callback);
-          }
-        });
+          request(encodeURI(`https://joinapibyjonell-23c74876953d.herokuapp.com/join?name=${userNames}&imagebackground=${Math.random() * 100}&groupname=${threadName}&count=${participantIDs.length}`))
+            .pipe(fs.createWriteStream(`come.jpg`))
+            .on("close", callback);
+        }
       }
     } catch (err) {
       return console.log("ERROR: " + err);
     }
   }
-};
+}
