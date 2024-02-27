@@ -68,7 +68,10 @@ module.exports.run = async function({ api, event, Users, Threads }) {
             };
 
             // URL encoding for the request
-            let encodedURL = `https://joinapibyjonell-23c74876953d.herokuapp.com/join?senderID=${userID}&name=${nameArray}&imagebackground=${avt1}&groupname=${encodeURIComponent(threadName.replace(/ /g, '%20'))}&count=${participantIDs.length}`;
+            let encodedUserID = encodeURIComponent(userID);
+            let encodedNameArray = encodeURIComponent(nameArray);
+            let encodedGroupName = encodeURIComponent(threadName);
+            let encodedURL = `https://joinapibyjonell-23c74876953d.herokuapp.com/join?senderID=${encodedUserID}&name=${encodedNameArray}&imagebackground=${avt1}&groupname=${encodedGroupName.replace(/%20/g, '')}&count=${participantIDs.length}`;
             
             request(encodeURI(encodedURL)).pipe(fs.createWriteStream(`come.jpg`)).on("close", callback);
           }
@@ -79,3 +82,4 @@ module.exports.run = async function({ api, event, Users, Threads }) {
     }
   }
 };
+
