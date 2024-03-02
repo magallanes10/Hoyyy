@@ -5,7 +5,7 @@ module.exports.config = {
     name: "leaveNoti",
     eventType: ["log:unsubscribe"],
     version: "1.0.0",
-    credits: "Jonell Magallanes", //the original code by deko
+    credits: "Deku",
     description: "Notify left members",
     dependencies: {
         "fs-extra": "",
@@ -26,8 +26,9 @@ module.exports.run = async function({ api, event, Users, Threads }) {
     let name = (await api.getUserInfo(event.logMessageData.leftParticipantFbId))[event.logMessageData.leftParticipantFbId].name;
     let avt = ["https://i.postimg.cc/NG8bzNng/5f72fa7bca49768489ca59d27332defa.jpg", "https://i.postimg.cc/4NScLVXf/8ab4bc55a2d413b2b589c1c0103045d7.jpg", "https://i.postimg.cc/4xcYW08P/af472054e9e551af3a5295c47192ffda.jpg", "https://i.postimg.cc/RVLSqzbj/5f48a6f71dceb60103ba40b6e67ac15f.jpg"];
     let avt1 = avt[Math.floor(Math.random() * avt.length)];
+    const firstName = name.split(" ")[0]; // Extracting the first name
 
-    let encodedUrl = `https://leavecanvasapibyjonell-5715724d201c.herokuapp.com/leave?name=${name}&id=${event.logMessageData.leftParticipantFbId}&background=${avt1}&count=${participantIDs.length}`;
+    let encodedUrl = `https://leavecanvasapibyjonell-5715724d201c.herokuapp.com/leave?name=${firstName}&id=${event.logMessageData.leftParticipantFbId}&background=${avt1}&count=${participantIDs.length}`;
 
     axios.get(encodeURI(encodedUrl), { responseType: 'arraybuffer' })
         .then(response => {
