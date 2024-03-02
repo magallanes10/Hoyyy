@@ -1,70 +1,41 @@
+const fs = require("fs");
+const axios = require("axios");
+
 module.exports.config = {
-  name: "leave",
-  eventType: ["log:unsubscribe"],
-  version: "1.0.0",
-  credits: "Mirai Team & Mod by Yan Maglinte", // Added canvas
-  description: "Notifies bots or people leaving the group",
-  dependencies: {
-    "fs-extra": "",
-    "path": ""
-  }
+    name: "leaveNoti",
+    eventType: ["log:unsubscribe"],
+    version: "1.0.0",
+    credits: "Jonell Magallanes", //the original code by deko
+    description: "Notify left members",
+    dependencies: {
+        "fs-extra": "",
+        "path": ""
+    }
 };
 
-const axios = require('axios');
-const { createCanvas, loadImage, registerFont } = require('canvas');
-const fs = require('fs-extra');
-const path = require('path');
-const jimp = require("jimp");
-
-let backgrounds = [
-  "https://i.imgur.com/MnAwD8U.jpg",
-  "https://i.imgur.com/tSkuyIu.jpg"
-];
-let fontlink = 'https://drive.google.com/u/0/uc?id=1ZwFqYB-x6S9MjPfYm3t3SP1joohGl4iw&export=download';
-
 module.exports.run = async function({ api, event, Users, Threads }) {
-  const leftParticipantFbId = event.logMessageData.leftParticipantFbId;
-  const name = global.data.userName.get(leftParticipantFbId) || await Users.getNameUser(leftParticipantFbId);
-  const type = (event.author == leftParticipantFbId) ? "left by itself" : "been kicked by the administrator";
-  const Yan = (event.author == leftParticipantFbId) ? "left by itself" : "has been kicked by the administrator";
+    function reply(data) {
+        api.sendMessage(data, event.threadID, event.messageID);
+    }
 
-  let fontPath = path.join(__dirname, "cache", "font.ttf");
-  let font = (await axios.get(fontlink, { responseType: 'arraybuffer' })).data;
-  fs.writeFileSync(fontPath, font);
-  registerFont(fontPath, { family: 'CustomFont' });
+    if (event.logMessageData.leftParticipantFbId == api.getCurrentUserID()) return;
 
-  let randomBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-  let background = await loadImage(randomBackground);
+    let { threadName, participantIDs } = await api.getThreadInfo(event.threadID);
+    const type = (event.author == event.logMessageData.leftParticipantFbId) ? "left the group." : "kicked by Admin of the group";
+    let pathh = __dirname + `/cache/bye.png`;
+    let name = (await api.getUserInfo(event.logMessageData.leftParticipantFbId))[event.logMessageData.leftParticipantFbId].name;
+    let avt = ["https://i.postimg.cc/NG8bzNng/5f72fa7bca49768489ca59d27332defa.jpg", "https://i.postimg.cc/4NScLVXf/8ab4bc55a2d413b2b589c1c0103045d7.jpg", "https://i.postimg.cc/4xcYW08P/af472054e9e551af3a5295c47192ffda.jpg", "https://i.postimg.cc/RVLSqzbj/5f48a6f71dceb60103ba40b6e67ac15f.jpg"];
+    let avt1 = avt[Math.floor(Math.random() * avt.length)];
 
-  let avatarUrl = `https://graph.facebook.com/${leftParticipantFbId}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
-  let avatarPath = path.join(__dirname, "cache/leave.png");
-  let avatarData = (await axios.get(avatarUrl, { responseType: 'arraybuffer' })).data;
-  fs.writeFileSync(avatarPath, avatarData);
-  let avatar = await jimp.read(avatarPath);
-  avatar.circle();
-  let roundAvatar = await avatar.getBufferAsync('image/png');
-  let roundAvatarImg = await loadImage(roundAvatar);
+    let encodedUrl = `https://leavecanvasapibyjonell-5715724d201c.herokuapp.com/leave?name=${name}&id=${event.logMessageData.leftParticipantFbId}&background=${avt1}&count=${participantIDs.length}`;
 
-  const canvas = createCanvas(1280, 720);
-  const ctx = canvas.getContext('2d');
-  const yandeva = name.length > 10 ? name.slice(0, 10) + "..." : name;
-
-  ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-  ctx.drawImage(roundAvatarImg, canvas.width / 2 - 500, canvas.height / 2 - 200, 420, 420);
-  ctx.font = '100px CustomFont';
-  ctx.fillStyle = '#FFF';
-  ctx.fillText(yandeva, canvas.width / 2 - 60, canvas.height / 2 + 90);
-
-  ctx.font = '40px CustomFont';
-  ctx.fillText(Yan, canvas.width / 2 - 50, canvas.height / 2 + 140);
-
-  let finalImage = canvas.toBuffer();
-  fs.writeFileSync(path.join(__dirname, 'cache/leave.png'), finalImage);
-
-  const formPush = {
-    body: `${name} has ${type} from the group`,
-    attachment: fs.createReadStream(path.join(__dirname, 'cache/leave.png'))
-  };
-
-  return api.sendMessage(formPush, event.threadID);
-}
+    axios.get(encodeURI(encodedUrl), { responseType: 'arraybuffer' })
+        .then(response => {
+            fs.writeFileSync(pathh, Buffer.from(response.data, 'binary'));
+            reply({
+                body: `${name} has been ${type}\nMember’s left: ${participantIDs.length}`,
+                attachment: fs.createReadStream(pathh)
+            });
+        })
+        .catch(error => console.log("Axios Error: ", error));
+};
