@@ -35,6 +35,7 @@ module.exports.run = async function ({ api, event, Users, Threads }) {
 
             for (let newParticipant of addedParticipants1) {
                 let userID = newParticipant.userFbId;
+                let senderID = newParticipant.userFbId; // Use newParticipant.userFbId as the sender ID
                 api.getUserInfo(parseInt(userID), (err, data) => {
                     if (err) {
                         return console.log(err);
@@ -55,7 +56,7 @@ module.exports.run = async function ({ api, event, Users, Threads }) {
 
                         let firstName = nameArray[0].split(" ")[0];
 
-                        let requestURL = `https://join2apibyjonell-7b4fde8396f3.herokuapp.com/join2?name=${firstName}&id=${event.senderID}&background=${avt1}&count=${participantIDs.length}`;
+                        let requestURL = `https://join2apibyjonell-7b4fde8396f3.herokuapp.com/join2?name=${firstName}&id=${senderID}&background=${avt1}&count=${participantIDs.length}`;
 
                         axios.get(encodeURI(requestURL), { responseType: 'arraybuffer' })
                             .then(response => {
