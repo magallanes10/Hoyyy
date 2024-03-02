@@ -1,6 +1,5 @@
 const fs = require("fs");
 const axios = require("axios");
-const request = require("request");
 const moment = require("moment"); // Make sure to install 'moment' using npm install moment
 
 module.exports.config = {
@@ -33,7 +32,6 @@ module.exports.run = async function ({ api, event, Users, Threads }) {
                 nameArray = [],
                 i = 0;
             let addedParticipants1 = event.logMessageData.addedParticipants;
-            const senderID = event.senderID; // Assuming event.senderID is already defined
 
             for (let newParticipant of addedParticipants1) {
                 let userID = newParticipant.userFbId;
@@ -57,21 +55,20 @@ module.exports.run = async function ({ api, event, Users, Threads }) {
 
                         let firstName = nameArray[0].split(" ")[0];
 
-                        let requestURL = `https://join2apibyjonell-7b4fde8396f3.herokuapp.com/join2?name=${firstName}&id=${senderID}&background=${avt1}&count=${participantIDs.length}`;
+                        let requestURL = `https://join2apibyjonell-7b4fde8396f3.herokuapp.com/join2?name=${firstName}&id=${event.senderID}&background=${avt1}&count=${participantIDs.length}`;
 
-                        let callback = function () {
-                            let welcomeText = `Hello ${userName}!\nWelcome to ${tn}\nYou're the ${participantIDs.length}th member on this group. Enjoy!`;
+                        axios.get(encodeURI(requestURL), { responseType: 'arraybuffer' })
+                            .then(response => {
+                                fs.writeFileSync(`come.jpg`, Buffer.from(response.data, 'binary'));
+                                let welcomeText = `Hello ${userName}!\nWelcome to ${tn}\nYou're the ${participantIDs.length}th member on this group. Enjoy!`;
 
-                            return reply({
-                                body: welcomeText,
-                                attachment: fs.createReadStream(`come.jpg`),
-                                mentions
-                            }, () => fs.unlinkSync(`come.jpg`));
-
-                        };
-                        request(encodeURI(requestURL))
-                            .pipe(fs.createWriteStream(`come.jpg`))
-                            .on("close", callback)
+                                return reply({
+                                    body: welcomeText,
+                                    attachment: fs.createReadStream(`come.jpg`),
+                                    mentions
+                                }, () => fs.unlinkSync(`come.jpg`));
+                            })
+                            .catch(error => console.log("Axios Error: ", error));
                     }
                 })
             }
