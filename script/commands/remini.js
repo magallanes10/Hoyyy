@@ -3,47 +3,40 @@ const fs = require('fs-extra');
 
 module.exports.config = {
   name: "remini",
-  version: "2.2",
+  version: "1.0.",
   hasPermssion: 0,
-  credits: "Mark Hitsuraan",
-  description: "enhance",
-  commandCategory: "no prefix",
-  usages: "Enhancer",
-  usePrefix: true,
+  credits: "Jonell Magallanes",
+  description: "Enhancing your photo", //api by jonell Magallanes 
+  commandCategory: "Media",
+  usePrefix: false,
+  usages: "[reply image]",
   cooldowns: 2,
 };
 
-module.exports.handleEvent = async function ({ api, event }) {
-  if (!(event.body.indexOf("remini") === 0 || event.body.indexOf("Remini") === 0)) return;
-  const args = event.body.split(/\s+/);
-  args.shift();
-
-  const pathie = __dirname + `/cache/zombie.jpg`;
+module.exports.run = async ({ api, event, args }) => {
+  const pathie = './cache/enhanced.jpg';
   const { threadID, messageID } = event;
 
-  const photoUrl = event.messageReply.attachments[0] ? event.messageReply.attachments[0].url : args.join(" ");
+  const james = event.messageReply.attachments[0].url || args.join(" ");
 
-  if (!photoUrl) {
-    api.sendMessage("Please reply to a image to proceed enhancing.", threadID, messageID);
-    return;
-  }
+  try {
+    api.sendMessage("⏱️ | Your Photo is Enhancing. Please Wait....", threadID, messageID);
 
-  api.sendMessage("enhancing, please wait a moment...", threadID, async () => {
-    try {
-      const response = await axios.get(`https://allinoneapis.onrender.com/api/try/remini?url=${encodeURIComponent(photoUrl)}`);
-      const processedImageURL = response.data.image_data;
-      const img = (await axios.get(processedImageURL, { responseType: "arraybuffer" })).data;
+    const response = await axios.get(`https://jonellccapisproject-e1a0d0d91186.herokuapp.com/api/remini?imageUrl=${encodeURIComponent(james)}`);
+    const processedImageURL = response.data.image_data;
 
-      fs.writeFileSync(pathie, Buffer.from(img, 'binary'));
+    const imgResponse = await axios.get(processedImageURL, { responseType: "stream" });
 
+    const writeStream = fs.createWriteStream(pathie);
+    imgResponse.data.pipe(writeStream);
+
+    writeStream.on('finish', () => {
       api.sendMessage({
-        body: "Enhanced Successfully!",
+        body: "🖼️ | Your Photo has been Enhanced!",
         attachment: fs.createReadStream(pathie)
       }, threadID, () => fs.unlinkSync(pathie), messageID);
-    } catch (error) {
-      api.sendMessage(`error processing image: ${error}`, threadID, messageID);
-    }
-  });
+    });
+  } catch (error) {
+    api.sendMessage(`❎ | Error processing image: ${error}`, threadID, messageID);
+  }
 };
-
-module.exports.run = async function ({ api, event }) {};
