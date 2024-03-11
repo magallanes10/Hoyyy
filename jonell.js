@@ -405,6 +405,7 @@ var o = moment.tz("Asia/Manila").format("MM/DD/YYYY");
   scheduled: true,
   timezone: "Asia/Manila"
 }); 
+	    global.custom = require('./custom')({ api: loginApiData });
       var tet = global.config.ADMINBOT;
 cron.schedule(`0 0 */24 * * *`, () => {
   for (let pep of tet)
